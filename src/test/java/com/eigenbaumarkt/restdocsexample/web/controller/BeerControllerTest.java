@@ -7,11 +7,14 @@ import com.eigenbaumarkt.restdocsexample.web.model.BeerDTO;
 import com.eigenbaumarkt.restdocsexample.web.model.BeerStyleEnum;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.MediaType;
+import org.springframework.restdocs.RestDocumentationExtension;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
@@ -23,19 +26,26 @@ import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+// Autoconfigure REST docs, with Annotation; similar to autoconfiguring the MockMvc-Object:
+@AutoConfigureRestDocs
+// bring up the Spring Boot Web layer for testing:
 @WebMvcTest(BeerController.class)
-// bring in the mappers:
+// extend the WebMvcTest
+@ExtendWith(RestDocumentationExtension.class)
+// package to look for the mappers:
 @ComponentScan(basePackages = "com.eigenbaumarkt.restdocsexample.web.mappers")
 class BeerControllerTest {
 
-    // bring only up the web layer, not the whole Spring framework
+    // wire in a MockMvc-Object autoconfigured by Spring boot
     @Autowired
     MockMvc mockMvc;
 
+    // autoconfigure and bring in an ObjectMapper-Object for the tests:
     @Autowired
     ObjectMapper objectMapper;
 
-    // mocking the repository, not bringing up the database layer from the Spring framework
+    // only mocking a repository object, that means use a "crash test dummy" instead of using a real repository
+    // including bringing up the whole database layer from the Spring framework and a database
     @MockBean
     BeerRepository beerRepository;
 
