@@ -36,7 +36,7 @@ import static org.springframework.restdocs.snippet.Attributes.key;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 // Autoconfigure REST docs, with Annotation; similar to autoconfiguring the MockMvc-Object:
-@AutoConfigureRestDocs
+@AutoConfigureRestDocs(uriScheme = "https", uriHost = "dev.eigenbaumarkt.com", uriPort = 80)
 // bring up the Spring Boot Web layer for testing:
 @WebMvcTest(BeerController.class)
 // extend the WebMvcTest
