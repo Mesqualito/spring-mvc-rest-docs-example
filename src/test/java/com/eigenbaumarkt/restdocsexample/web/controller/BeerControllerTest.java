@@ -15,7 +15,10 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.MediaType;
 import org.springframework.restdocs.RestDocumentationExtension;
+import org.springframework.restdocs.constraints.ConstraintDescriptions;
+import org.springframework.restdocs.payload.FieldDescriptor;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -29,6 +32,7 @@ import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuild
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.payload.PayloadDocumentation.*;
 import static org.springframework.restdocs.request.RequestDocumentation.*;
+import static org.springframework.restdocs.snippet.Attributes.key;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 // Autoconfigure REST docs, with Annotation; similar to autoconfiguring the MockMvc-Object:
@@ -88,21 +92,23 @@ class BeerControllerTest {
         BeerDTO BeerDTO = getValidBeerDTO();
         String BeerDTOJson = objectMapper.writeValueAsString(BeerDTO);
 
+        ConstrainedFields fields = new ConstrainedFields(BeerDTO.class);
+
         mockMvc.perform(post("/api/v1/beer/")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(BeerDTOJson))
                 .andExpect(status().isCreated())
                 .andDo(document("v1/beer",
                         requestFields(
-                                fieldWithPath("id").ignored(),
-                                fieldWithPath("version").ignored(),
-                                fieldWithPath("createdDate").ignored(),
-                                fieldWithPath("lastModifiedDate").ignored(),
-                                fieldWithPath("beerName").description("The name of the beer"),
-                                fieldWithPath("beerStyle").description("The style of the beer"),
-                                fieldWithPath("upc").description("Beer UPC").attributes(),
-                                fieldWithPath("price").description("The price of the beer"),
-                                fieldWithPath("quantityOnHand").ignored()
+                                fields.withPath("id").ignored(),
+                                fields.withPath("version").ignored(),
+                                fields.withPath("createdDate").ignored(),
+                                fields.withPath("lastModifiedDate").ignored(),
+                                fields.withPath("beerName").description("The name of the beer"),
+                                fields.withPath("beerStyle").description("The style of the beer"),
+                                fields.withPath("upc").description("Beer UPC").attributes(),
+                                fields.withPath("price").description("The price of the beer"),
+                                fields.withPath("quantityOnHand").ignored()
                         )));
     }
 
@@ -126,5 +132,23 @@ class BeerControllerTest {
                 .build();
 
     }
+
+    // needed for documenting Constraints in the DTO with Spring REST docs
+    // with Java reflection for the DTO's fields and their constraints
+    private static class ConstrainedFields {
+
+        private final ConstraintDescriptions constraintDescriptions;
+
+        ConstrainedFields(Class<?> input) {
+            this.constraintDescriptions = new ConstraintDescriptions(input);
+        }
+
+        private FieldDescriptor withPath(String path) {
+            return fieldWithPath(path).attributes(key("constraints").value(StringUtils
+                    .collectionToDelimitedString(this.constraintDescriptions
+                            .descriptionsForProperty(path), ". ")));
+        }
+    }
+
 
 }
