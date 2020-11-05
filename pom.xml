@@ -16,7 +16,7 @@
     </description>
 
     <properties>
-        <java.version>15</java.version>
+        <java.version>13</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <org.mapstruct.version>1.4.1.Final</org.mapstruct.version>
