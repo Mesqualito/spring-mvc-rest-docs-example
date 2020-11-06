@@ -21,6 +21,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -62,11 +63,15 @@ class BeerControllerTest {
     void getBeerById() throws Exception {
         given(beerRepository.findById(any())).willReturn(Optional.of(Beer.builder().build()));
 
+        ConstrainedFields fields = new ConstrainedFields(BeerDTO.class);
+
         mockMvc.perform(get("/api/v1/beer/{beerId}", UUID.randomUUID().toString())
                 // Controller will ignore this; only an exercise for Spring REST docs - API documentation:
                 .param("isCold", "yes")
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
+                // .andExpect(jsonPath("$.id", is(validBeer.getId().toString())))
+                // .andExpect(jsonPath("$.beerName", is("Beer1")))
                 .andDo(document("v1/beer-get",
                         pathParameters(
                                 parameterWithName("beerId").description("UUID of desired beer to get.")
@@ -75,15 +80,16 @@ class BeerControllerTest {
                                 parameterWithName("isCold").description("Is beer cold query parameter")
                         ),
                         responseFields(
-                                fieldWithPath("id").description("Id of Beer"),
-                                fieldWithPath("version").description("Version number"),
-                                fieldWithPath("createdDate").description("Date when entry was created"),
-                                fieldWithPath("lastModifiedDate").description("Date when entry was updated the last time"),
-                                fieldWithPath("beerName").description("Name of the beer"),
-                                fieldWithPath("beerStyle").description("Style of the beer"),
-                                fieldWithPath("upc").description("UPC of the beer"),
-                                fieldWithPath("price").description("price per you_name_it"),
-                                fieldWithPath("quantityOnHand").description("Quantity on hand")
+                                fields.withPath("id").description("Id of Beer").type(UUID.class),
+                                fields.withPath("version").description("Version number").type(Integer.class),
+                                fields.withPath("createdDate").description("Date when entry was created").type(OffsetDateTime.class),
+                                fields.withPath("lastModifiedDate").description("Date when entry was updated the last time").type(OffsetDateTime.class),
+                                // TODO: Reflection not working here ?
+                                fields.withPath("beerName").description("Name of the beer"),
+                                fields.withPath("beerStyle").description("Style of the beer"),
+                                fields.withPath("upc").description("UPC of the beer"),
+                                fields.withPath("price").description("price per you_name_it"),
+                                fields.withPath("quantityOnHand").description("Quantity on hand")
                         )));
     }
 
@@ -134,9 +140,8 @@ class BeerControllerTest {
     }
 
     // needed for documenting Constraints in the DTO with Spring REST docs
-    // with Java reflection for the DTO's fields and their constraints
+    // with Java reflection from the bean validation for the DTO's fields and their constraints
     private static class ConstrainedFields {
-
         private final ConstraintDescriptions constraintDescriptions;
 
         ConstrainedFields(Class<?> input) {
