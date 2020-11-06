@@ -1,9 +1,11 @@
-version: 2.1
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/openjdk:13-buster-node-browsers-legacy
 
-orbs:
-  maven: circleci/maven@1.0.3
-
-workflows:
-  maven_test:
-    jobs:
-      - maven/test # checkout, build, test, and upload test results
+    steps:
+      - checkout
+      - run : mvn test
+      - store_artifacts:
+          path:  target
